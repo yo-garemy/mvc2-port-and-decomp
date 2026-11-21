@@ -127,3 +127,11 @@ visited, of which 319,000 fail the depth test and 547,000 are written
 A fight frame is about 5,000 triangles, 68,000 sprite fragments and 540,000
 stage-mesh fragments (bilinear, palette). The rasteriser is nearly all of the
 frame; the game step is 1 to 2 ms.
+
+**On PowerPC (2026-11-21).** `swgl_bench` built for 32-bit big-endian
+PowerPC 750 (GCC 13 `-O2 -mcpu=750 -ffp-contract=off`, run under
+`qemu-ppc-static`) gives the same checksum, `023144b8`, as x86-64. It takes
+341.6 million instructions per frame, against 274.5 million on x86-64
+(qemu `-one-insn-per-tb -d exec` and callgrind, 2 frames minus 1). On the
+Wii's 729 MHz CPU that is an estimated 0.5–0.7 s per frame (not measured on
+hardware): [Documentation/WII_FEASIBILITY.md](../../Documentation/WII_FEASIBILITY.md) §4.

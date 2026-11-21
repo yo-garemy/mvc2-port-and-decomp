@@ -118,6 +118,7 @@ static void wav_header(FILE *f, unsigned bytes)
  * --wav writes the sound of the whole run (800 frames of 48 kHz stereo per game step);
  * --hash prints the state hash of every frame (the wasm comparison);
  * --mash presses START and CROSS in turn, which gets from the title into a fight;
+ * --mem prints the module's heap break each time it grows (the memory high-water mark);
  * --nodraw runs the game steps without drawing, --draw-from N draws only from
  * frame N on; --time-from N times only the steps from frame N on;
  * --fuzz SEED does that outside fights and presses random directions and
@@ -135,7 +136,8 @@ int main(int argc, char **argv)
     struct w2c_wasi__snapshot__preview1 wasi = { &m };
     long i, n = argc > a0 ? strtol(argv[a0], 0, 0) : 0, shot_at[16], time_from = 0, draw_from = 0;
     const char *shot_file[16];
-    int hash = 0, mash = 0, nshot = 0, a, fuzz = 0, nodraw = 0;
+    int hash = 0, mash = 0, nshot = 0, a, fuzz = 0, nodraw = 0, mem = 0;
+    u32 mem_top = 0;
     unsigned rng = 1, held = 0;
     FILE *wav = 0;
     unsigned wav_bytes = 0;
@@ -147,6 +149,7 @@ int main(int argc, char **argv)
         if (!strcmp(argv[a], "--hash")) hash = 1;
         else if (!strcmp(argv[a], "--mash")) mash = 1;
         else if (!strcmp(argv[a], "--nodraw")) nodraw = 1;
+        else if (!strcmp(argv[a], "--mem")) mem = 1;
         else if (!strcmp(argv[a], "--draw-from") && a + 1 < argc) draw_from = strtol(argv[++a], 0, 0);
         else if (!strcmp(argv[a], "--time-from") && a + 1 < argc) time_from = strtol(argv[++a], 0, 0);
         else if (!strcmp(argv[a], "--fuzz") && a + 1 < argc) { fuzz = mash = 1; rng = (unsigned)strtoul(argv[++a], 0, 0) * 2654435761u + 1; }
@@ -189,6 +192,10 @@ int main(int argc, char **argv)
             wav_bytes += 800 * 4;
         }
         if (i >= time_from) step += now_sec() - t0;
+        if (mem && w2c_mvc2g_mvc2g_mem_top(&m) > mem_top) {
+            mem_top = w2c_mvc2g_mvc2g_mem_top(&m);
+            fprintf(stderr, "[mvc2g] frame %ld: heap break %.2f MB\n", i, mem_top / 1048576.0);
+        }
         if (hash)
             printf("%ld %08x %06x\n", i, w2c_mvc2g_mvc2g_state_hash(&m), w2c_mvc2g_mvc2g_game_state(&m));
         for (a = 0; a < nshot; a++)

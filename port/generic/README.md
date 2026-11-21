@@ -41,7 +41,7 @@ compiler. Set-up for a fresh machine is in [AGENTS.md](../../AGENTS.md).
 
 ```sh
 port/generic/build.sh                 # link, translate, build, compare (about 7 minutes)
-build/port-generic/mvc2g_native DISC FRAMES [--hash] [--mash] [--fuzz SEED] [--nodraw]
+build/port-generic/mvc2g_native DISC FRAMES [--hash] [--mash] [--fuzz SEED] [--nodraw] [--mem]
                                       [--wav FILE.wav] [--shot FRAME:FILE.ppm]
 EMBED=1 port/generic/build.sh         # also private/generic/mvc2g_personal (below)
 port/generic/coverage.sh              # which of the game's functions run in fuzzed play
@@ -99,6 +99,7 @@ so it needs GCC or Clang.
 | Buttons | Player 1 and 2 pad bits; no analog sticks |
 | Speed, x86-64, translated C, `-O2` | Fight frames (`--fuzz 3 --time-from 1900`, 1300 frames): 20.4 ms per frame, of which the game step and sound are 1.5 ms (2.1 GHz server vCPU). From boot through menus into a fight (`--mash`, 3000 frames): 21.5 ms. 60 fps needs 16.7 ms |
 | Other CPUs | **arm64** and **s390x (big-endian, 64-bit)**: the translated C, cross-compiled with GCC 13 and run under `qemu-user`, gives the same 1200 state hashes as the wasm (2026-11-13). Not run on real hardware of either kind; no 32-bit or non-GCC target tried |
+| 32-bit big-endian PowerPC (Wii CPU) | The translation compiles with `powerpc-linux-gnu-gcc` 13 `-O2 -mcpu=750 -ffp-contract=off -DWABT_BIG_ENDIAN=1`, no source changes; `.text` 17.6 MB at `-O2`, 10.8 MB at `-Os`. Under `qemu-ppc-static` it instantiates and rejects a zero-filled image like the x86-64 build (2026-11-21). The state-hash comparison was **not** run (no disc). See [Documentation/WII_FEASIBILITY.md](../../Documentation/WII_FEASIBILITY.md) |
 
 Known gaps:
 

@@ -14,12 +14,15 @@
  *                 mvc2g_draw(on)                   0: the next steps draw nothing (frame skip)
  *                 mvc2g_canvas()                   the picture: 640x480 RGBA8, top row first
  *                 mvc2g_audio(frames)              that many 48 kHz stereo frames, signed 16-bit
+ *                 mvc2g_mem_top()                  the heap break (sbrk(0)): how much of the
+ *                                                  module's memory is in use (sizing for small devices)
  *
  * The picture is drawn by the port's renderer on render/swgl.c (no GPU), the
  * sound is mixed by port/audio (no device): the host only shows the canvas
  * and plays the samples.  One game step is 1/60 s, i.e. 800 frames of sound.
  */
 #include <stdint.h>
+#include <unistd.h>
 #include <emscripten.h>
 #include "../platform/fs.h"
 #include "../host/host_loop.h"
@@ -104,3 +107,9 @@ EMSCRIPTEN_KEEPALIVE uint32_t mvc2g_state_hash(void)
     unsigned char *heap = host_ee_heap_base();
     return heap ? fnv(h, heap, EE_HEAP_SIZE) : h;
 }
+
+/* The heap break: every byte of the module's memory below it is in use (static
+ * data, stack, heap).  For sizing devices with little RAM (the Wii's 64 MB
+ * MEM2); dlmalloc does not give memory back, so the largest value seen over a
+ * run is the high-water mark. */
+EMSCRIPTEN_KEEPALIVE uint32_t mvc2g_mem_top(void) { return (uint32_t)(uintptr_t)sbrk(0); }
